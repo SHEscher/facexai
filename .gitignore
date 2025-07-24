@@ -1,0 +1,7 @@
+temp/
+data/
+results/
+.DS_Store
+.idea/
+__marimo__/
+*backup*
