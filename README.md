@@ -18,7 +18,7 @@ Check the section [Requirements](#requirements) for information on how to instal
 uvx marimo edit --sandbox facexai.py
 ```
 
-## Add packages
+### Add packages
 
 ```shell
 uv add --script=facexai.py [package]
@@ -27,6 +27,15 @@ uv add --script=facexai.py [package]
 Or run the notebook and import the respective package.
 If the package is not installed yet,
 you can install it via `marimo` within the notebook.
+
+## Data
+
+Required data can be downloaded via the notebook.
+
+You can manually download the data also from: https://keeper.mpdl.mpg.de/f/4efc6def1acd4de8a84d/
+
+Unzip the downloaded file and move its content to `./data/`.
+
 
 ## Requirements
 
@@ -48,12 +57,12 @@ For other installation methods, see the `uv` [docs](https://docs.astral.sh/uv/ge
 
 ## Housekeeping
 
-Some recommendations after being done: 
+Some recommendations after being done:
 
 ### Clean up with `uv`
 
 The (great) Python package manager `uv` caches packages to reuse them across projects.
-If you do not intend to use `uv` further, consider deleting the cache of `uv`. 
+If you do not intend to use `uv` further, consider deleting the cache of `uv`.
 
 Run the following in your terminal:
 
