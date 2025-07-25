@@ -34,7 +34,16 @@ Required data can be downloaded via the notebook.
 
 You can manually download the data also from: https://keeper.mpdl.mpg.de/f/4efc6def1acd4de8a84d/
 
-Unzip the downloaded file and move its content to `./data/`.
+Unzip the downloaded file and move its content to `./data/`:
+
+```
+facexai/
+├── data/
+│   ├── faces/                                                                      
+│   └── vgg_face_torch/
+├── facexai.py
+└── README.md
+```
 
 
 ## Requirements
