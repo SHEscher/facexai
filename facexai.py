@@ -1922,7 +1922,8 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(get_list_of_face_names, mo, path_to_image):
+def _(all_amap_button, get_list_of_face_names, mo, path_to_image):
+    all_amap_button  # reload when button is pressed
     select_face = mo.ui.dropdown(
         get_list_of_face_names(),
         label="Explore similarities for the selected face image:",
