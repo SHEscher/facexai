@@ -4,7 +4,7 @@
 # /// script
 # requires-python = ">=3.13,<3.14"
 # dependencies = [
-#     "marimo>=0.14.13",
+#     "marimo>=0.14.13,<0.15",
 #     "numpy<=2.3,>=2.2",
 #     "torch==2.7.1",
 #     "zennit==0.5.1",
@@ -50,20 +50,13 @@ def _():
     import zipfile
     import umap
     from sklearn.decomposition import PCA
-    from zennit.attribution import (
-        Gradient,
-    )  # SmoothGrad, IntegratedGradients, Occlusion
-
-    # from zennit.canonizers import SequentialMergeBatchNorm  # same as VGGCanonizer
+    from zennit.attribution import Gradient
     from zennit.torchvision import VGGCanonizer
     from zennit.composites import (
         COMPOSITES,  # dict of all composite classes
-        # EpsilonGammaBox,  # EpsilonAlpha2Beta1, EpsilonPlusFlat, EpsilonAlpha2Beta1Flat,
     )
-    from zennit.image import imgify, imsave  # , CMAPS
+    from zennit.image import imgify, imsave
 
-    # from zennit.cmap import ColorMap
-    # from torchvision import transforms
     return (
         COMPOSITES,
         Gradient,
@@ -161,7 +154,7 @@ def _(
     urllib,
     zipfile,
 ):
-    DOWNLOAD_URL = "https://keeper.mpdl.mpg.de/f/4efc6def1acd4de8a84d/?dl=1"
+    DOWNLOAD_URL = "https://keeper.mpdl.mpg.de/f/cb07841a00db43e88b32/?dl=1"
     path_to_zipped_files = DOWNLOAD_DIR / "data.zip"
     _downloaded_and_unzipped = False
 
@@ -284,7 +277,7 @@ def _(mo):
     [VGG-Face](https://www.robots.ox.ac.uk/~vgg/software/vgg_face/) is a convolutional neural network (CNN) that has
     been trained to predict face identities (i.e., celebrities; $N_{identities} = 2,622$) from a large image dataset.
 
-    **Question**: Could this model be a model of human face perception? Why (not)?
+    **Question**: Could VGG-Face be a model of human face perception? Why (not)?
     """
     )
     return
@@ -493,7 +486,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(Image, Path, cv2, mo, np, plt, torch):
+def _(Path, cv2, mo, np, torch):
     IMG_SIZE = (224, 224)
     FILETYPES = [".png", ".jpg", ".jpeg"]
 
@@ -519,19 +512,6 @@ def _(Image, Path, cv2, mo, np, plt, torch):
                 .view(1, 3, 1, 1)
             )
         return image
-
-    def show_image(img: torch.Tensor, title: str = "", with_transform: bool = True):
-        """Show an image."""
-        fig, ax = plt.subplots(
-            nrows=1, ncols=1, sharex=True, sharey=True, num=title, figsize=(4, 4)
-        )
-
-        img = img[0].permute(1, 2, 0).to("cpu").numpy()
-        if with_transform:
-            img = (img - img.min()) / (img.max() - img.min()) * 255
-        img = img.astype(np.uint8)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        ax.imshow(Image.fromarray(img))
 
     return FILETYPES, IMG_SIZE, load_image_for_model
 
@@ -587,7 +567,7 @@ def _(mo, upload_pic):
         if upload_pic.value:
             return mo.ui.text_area(
                 # value=f"{datetime.now():%Y-%m-%d_%H-%M-%S}_upload.png",
-                placeholder="unique_image_name.png",  # "image-name.png",
+                placeholder="unique_image_name.png",
                 label="#### Name the uploaded image",
                 max_length=25,
                 full_width=False,
@@ -698,7 +678,6 @@ def _(MODEL_DIR):
     path_to_labels = MODEL_DIR / "names.txt"
 
     with open(path_to_labels, "r") as labels:
-        # list_of_labels = labels.readlines()
         list_of_labels = labels.read().splitlines()
     return (list_of_labels,)
 
@@ -767,8 +746,6 @@ def _(display_name, get_search_url, img, list_of_labels, torch, vgg_face):
 
     # Find index with the highest value in output vector, that is, the prediction
     idx_pred = torch.argmax(out)
-    # print(f"Predicted index {idx_pred}")
-    # print(f"Predicted person:", list_of_labels[idx_pred])
 
     # Extract name of person
     pred_name = display_name(label=list_of_labels[idx_pred])
@@ -783,7 +760,6 @@ def _(idx_pred, img_search_url, list_of_labels, mo, pred_name):
         label="predicted",
         caption="index of output neuron",
         bordered=True,
-        # direction="increase",
     )
 
     total_stat = mo.stat(
@@ -791,7 +767,6 @@ def _(idx_pred, img_search_url, list_of_labels, mo, pred_name):
         label="total",
         bordered=True,
         caption="number of faces",
-        # direction="increase",
     )
 
     mo.md(
@@ -931,7 +906,6 @@ def _(
             img, torch.eye(n_labels)[[select_neuron.value]]
         )  # outp == idx_pred
 
-    # print(f"{relevance.shape = }")
     mo.md(
         f"""
         The computed **relevance map has the same shape as the model input** (i.e., the face image): {relevance.shape}
@@ -954,7 +928,6 @@ def _(amax, mo):
     CMAP = {
         "bwr": "bwr",
         "coldnhot": "coldnhot",
-        # "fire": ColorMap("00f,80:ff0,f00"),  # 00f is blue, ff0 is yellow, f00 is red, 0x80 is center of range
     }
 
     # CMAP.update(CMAPS.__dict__["_sources"].items())
@@ -984,7 +957,6 @@ def _(amax, mo):
         stop=amax.item(),
         step=0.00005,
         orientation="vertical",
-        # value=(5,50),
         label="vmin,vmax",
         full_width=False,
         disabled=False,  # maybe disable
@@ -1068,7 +1040,6 @@ def _(
 
 @app.cell(hide_code=True)
 def _(comp_name, mo, path_to_image, select_neuron, slider_level, xai_cmap):
-    # Image-input-name_attributor_selected-neuron_cmap_lvl # could add symmetric, vmin/vmax, level
     path_to_heatmap = (
         mo.notebook_dir()
         / "results"
@@ -1392,83 +1363,6 @@ def _(ROOT_DIR, all_amap_button, mo, path_to_activation_map_dir):
 
 
 @app.cell(hide_code=True)
-def _(ROOT_DIR, mo, path_to_activation_map_dir, pd):
-    select_amaps_upload = mo.ui.table(  # noqa: F841
-        data=pd.DataFrame(
-            data=[
-                str(p.relative_to(ROOT_DIR))
-                for p in path_to_activation_map_dir.glob("*.npy")
-            ],
-            columns=["paths"],
-        ),
-        label="**These activation maps were found**: ",
-        selection="multi",
-        show_column_summaries=False,
-    )
-    # select_amaps_upload
-    return
-
-
-@app.cell(hide_code=True)
-def _():
-    # TODO: implement script to upload selected files
-    # select_amaps_upload.value
-    return
-
-
-@app.cell(hide_code=True)
-def _(FACES_DIR, ROOT_DIR, mo, path_to_activation_map_dir):
-    mo.md(
-        f"""
-    ### Share latent activation maps via MPI cloud storage [`KEEPER`](https://keeper.mpdl.mpg.de/)
-
-    1. Upload your computed activation map(s) in './{path_to_activation_map_dir.relative_to(ROOT_DIR)}/' to:
-    [KEEPER/activation_maps/](https://keeper.mpdl.mpg.de/d/ef770128d0dc416bbd2a/)
-
-    3. Upload the corresponding face image(s) in './{FACES_DIR.relative_to(ROOT_DIR)}/' to:
-    [KEEPER/faces/](https://keeper.mpdl.mpg.de/d/7c628d17953a41fdba44/)
-
-    *It is important that the filenames for the faces are unique and that the activation maps are named accordingly
-    (e.g.: 'ak.png' and 'fc7_ak.npy')*
-    """
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    check_amap = mo.ui.checkbox(label="I uploaded the activation map(s)")
-    check_fimg = mo.ui.checkbox(label="I uploaded the corresponding face image(s)")
-
-    mo.hstack(
-        [
-            check_amap,
-            check_fimg,
-        ],
-        align="center",
-        justify="center",
-    )
-    return check_amap, check_fimg
-
-
-@app.cell(hide_code=True)
-def _(check_amap, check_fimg, mo):
-    mo.stop(
-        predicate=not (check_amap.value and check_fimg.value),
-        output=mo.center(
-            mo.md(
-                """
-                ### Please upload your data!
-
-                *Then check the boxes above.*
-                """
-            )
-        ),
-    )
-    return
-
-
-@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
@@ -1550,7 +1444,6 @@ def _(PCA, feat_tab, mo, pd, select_pca):
 
 @app.cell(hide_code=True)
 def _(feat_tab_t, umap):
-    # TODO: implement UMAP
     reducer = umap.UMAP(
         n_neighbors=5,
         min_dist=0.15,
@@ -1797,17 +1690,6 @@ def _(PCA, StandardScaler, get_df_vgg_activation_maps, np, npt, pd):
 
         return (b - a) * ((array - mini) / (maxi - mini)) + a
 
-    def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> np.ndarray:
-        """
-        Compute the cosine similarity between two vectors.
-
-        :param vec1: vector 1
-        :param vec2: vector 2
-        :return: cosine similarity of two vectors
-        """
-        # np.inner(vec1, vec2) ==  np.dot(vec1, vec2) | vec1 @ vec2.T  # noqa: ERA001
-        return np.inner(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
-
     def compute_feature_similarity_matrix(
         feature_table: pd.DataFrame,
         pca: bool | float = False,
@@ -1848,7 +1730,6 @@ def _(PCA, StandardScaler, get_df_vgg_activation_maps, np, npt, pd):
             print(
                 f"First {pca_model.n_components_} PCA components explain {explained_variance * 100:.1f}% of variance."
             )
-            # f"->\t{pca_model.explained_variance_ratio_}")
 
         feat_sim_mat = compute_cosine_similarity_matrix_from_features(
             features=feature_table.to_numpy().astype(np.float64)
@@ -2169,8 +2050,6 @@ def _(RESULT_DIR, ROOT_DIR, datetime, discussion_notes, mo, save_notes):
         if save_notes.value:
             path_to_notes = RESULT_DIR / "discussion_notes.md"
             path_to_notes.write_text(discussion_notes.value)
-            # with (RESULT_DIR / "discussion_notes.md").open("w") as notes:
-            # notes.write_text(discussion_notes.value)
             return mo.md(
                 f"""
                 ### Saved notes 
@@ -2207,7 +2086,6 @@ def _(mo):
             ),
             mo.video(
                 src="https://streaming-eu.mpg.de/de/institute/cbs/CoCoNUT/2024-11-27_Sebastian-Lapuschkin_CBS-CoCoNUT.mp4",
-                # src="temp/20250212_DataTrain_DataStory_scilaunch_SimonHofmann_DO_NOT_DISTRIBUTE.mp4",
                 autoplay=False,
                 controls=True,
                 loop=False,
@@ -2244,10 +2122,12 @@ def _(mo):
     uv cache clean
     ```
 
-    ### Clean up the results
+    ### Clean up remaining folders
 
-    You only need this file `facexai.py`, the `README.md`, and the `./data/` folder to reproduce the pipeline above.
-    Consider deleting the `./results/` folder to save some disk space after running this script.
+    You only need the files `facexai.py`, `README.md`, and the `./data/` folder to reproduce the pipeline above.
+    Consider deleting the `./results/` folder to save some disk space after running the script.
+
+    In case the automatic data download has been interrupted, delete the folder `./download/` manually.
     """
     )
     return
@@ -2255,15 +2135,27 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-    ## Contact
+    mo.hstack(
+        [
+            mo.md(
+                r"""
+                ## Contact
 
-    * Simon M. Hofmann: simon.hofmann[ät]cbs.mpg.de
-    * Bluesky: [@smnhfmnn.bsky.social](https://bsky.app/profile/smnhfmnn.bsky.social/)
-    * Website: [@MPI CBS](https://www.cbs.mpg.de/employees/simon-m-hofmann)
-    """
+                * Simon M. Hofmann: simon.hofmann[ät]cbs.mpg.de
+                * GitHub: [@SHEscher](https://github.com/SHEscher)
+                * Bluesky: [@smnhfmnn.bsky.social](https://bsky.app/profile/smnhfmnn.bsky.social/)
+                * Website: [@MPI CBS](https://www.cbs.mpg.de/employees/simon-m-hofmann)
+                """
+            ),
+            mo.image(
+                src="https://www.cbs.mpg.de/employee_images/94915-1681740655?t=eyJ3aWR0aCI6NDI2LCJoZWlnaHQiOjU0OCwiZml0IjoiY3JvcCIsImZpbGVfZXh0ZW5zaW9uIjoid2VicCJ9--27646ab4f30e7fedcf3f03ebd360565617825a1c",
+                height=200,
+                rounded=True,
+                caption="@ MPI CBS",
+            ),
+        ]
     )
+
     return
 
 

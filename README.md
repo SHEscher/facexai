@@ -1,5 +1,9 @@
 # XAI methods for face recognition models
 
+Explore the utility of explainable AI (XAI) methods for deep learning-based 
+face recognition models.
+Moreover, analyze the visual features learned by these models.
+
 ## Hands-on notebook
 
 We use a [`marimo`](https://marimo.io) notebook.
@@ -18,7 +22,9 @@ Check the section [Requirements](#requirements) for information on how to instal
 uvx marimo edit --sandbox facexai.py
 ```
 
-### Add packages
+#### Add packages [optional]
+
+In case you extend the notebook and want to add additional packages, use the following command:
 
 ```shell
 uv add --script=facexai.py [package]
@@ -26,11 +32,19 @@ uv add --script=facexai.py [package]
 
 Or run the notebook and import the respective package.
 If the package is not installed yet,
-you can install it via `marimo` within the notebook.
+you can install it via `uv` within the `marimo` notebook.
+
+### General motivation
+
+The notebook is supposed to be a playful introduction to the possibilities using
+XAI methods and further analysis techniques to gain insights into features and representations
+driving computational models of perception.
+
+Check out, i.e., unfold the code for more details on how the interactive components of the pipeline work.
 
 ## Data
 
-Required data can be downloaded via the notebook.
+Required data is automatically downloaded via the notebook.
 
 You can manually download the data also from: https://keeper.mpdl.mpg.de/f/4efc6def1acd4de8a84d/
 
@@ -44,7 +58,6 @@ facexai/
 ├── facexai.py
 └── README.md
 ```
-
 
 ## Requirements
 
@@ -79,11 +92,14 @@ Run the following in your terminal:
 uv cache clean
 ```
 
-### Clean up the results
+### Clean up remaining folders
 
 You only need the files `facexai.py`, `README.md`, and the `./data/` folder to reproduce the pipeline.
 Consider deleting the `./results/` folder to save some disk space after running the script.
 
+In case the automatic data download has been interrupted,
+delete the folder `./download/` manually.
+
 ## Contact
 
-Simon M. Hofmann – simon.hofmann[ät]cbs.mpg.de
+Simon M. Hofmann | simon.hofmann[ät]cbs.mpg.de | [GitHub @ SHEscher](https://github.com/SHEscher)
