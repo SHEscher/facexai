@@ -1,6 +1,6 @@
 # XAI methods for face recognition models
 
-Explore the utility of explainable AI (XAI) methods for deep learning-based 
+Explore the utility of explainable AI (XAI) methods for deep learning-based
 face recognition models.
 Moreover, analyze the visual features learned by these models.
 
@@ -46,14 +46,12 @@ Check out, i.e., unfold the code for more details on how the interactive compone
 
 Required data is automatically downloaded via the notebook.
 
-You can manually download the data also from: https://keeper.mpdl.mpg.de/f/4efc6def1acd4de8a84d/
-
-Unzip the downloaded file and move its content to `./data/`:
+The downloaded file gets unzipped and its content get moved to `./data/`:
 
 ```
 facexai/
 ├── data/
-│   ├── faces/                                                                      
+│   ├── faces/
 │   └── vgg_face_torch/
 ├── facexai.py
 └── README.md
