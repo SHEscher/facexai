@@ -711,7 +711,7 @@ def _(mo):
     Use the selected image and predict the person in the image.
 
     Note that if you chose an image / identity, which is not part of the original data distribution,
-    the network will make **a guess that should rely on similarities to data from the training distribution**. 
+    the network will make **a guess that should rely on similarities to data from the training distribution**.
     However, **unexpected predictions / classifications can occur**, too!
     That is, the person in the provided image has little or no resemblance to the predicted celebrity (i.e., class).
     """
@@ -2053,7 +2053,7 @@ def _(RESULT_DIR, ROOT_DIR, datetime, discussion_notes, mo, save_notes):
             path_to_notes.write_text(discussion_notes.value)
             return mo.md(
                 f"""
-                ### Saved notes 
+                ### Saved notes
 
                 at *{datetime.now()}* | to './{path_to_notes.relative_to(ROOT_DIR)}'
                 """
@@ -2108,14 +2108,14 @@ def _(mo):
         r"""
     ## Housekeeping
 
-    Some recommendations after being done: 
+    Some recommendations after being done:
 
 
     ### Clean up with `uv`
 
     The (great) Python package manager `uv` likes to cache packages to reuse them across projects.
     If you do not intend to use `uv` as Python-package manager,
-    consider deleting the cache of `uv`. 
+    consider deleting the cache of `uv`.
 
     Run the following in your terminal:
 
