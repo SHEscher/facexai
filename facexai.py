@@ -4,7 +4,7 @@
 # /// script
 # requires-python = ">=3.13,<3.14"
 # dependencies = [
-#     "marimo>=0.14.13,<0.15",
+#     "marimo>=0.15.0,<0.16",
 #     "numpy<=2.3,>=2.2",
 #     "torch==2.7.1",
 #     "zennit==0.5.1",
@@ -22,12 +22,11 @@
 
 import marimo
 
-__generated_with = "0.14.13"
+__generated_with = "0.15.0"
 app = marimo.App(width="medium")
 
-
-@app.cell(hide_code=True)
-def _():
+with app.setup(hide_code=True):
+    # Initialization code that runs before all other cells
     import marimo as mo
     from datetime import datetime
     import io
@@ -57,51 +56,21 @@ def _():
     )
     from zennit.image import imgify, imsave
 
-    return (
-        COMPOSITES,
-        Gradient,
-        Image,
-        OrderedDict,
-        PCA,
-        Path,
-        VGGCanonizer,
-        alt,
-        cv2,
-        datetime,
-        imgify,
-        imsave,
-        io,
-        math,
-        mo,
-        nn,
-        np,
-        npt,
-        pd,
-        plt,
-        re,
-        rsatoolbox,
-        shutil,
-        torch,
-        umap,
-        urllib,
-        zipfile,
-    )
-
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(
         r"""
     # Exploring predictions and latent features of deep neural networks
 
-    [Simon M. Hofmann](#contact) :: @Cognition Academy :: `July 25, 2025`
+    [Simon M. Hofmann](#contact) (2025)
     """
     )
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     # Collect relevant paths
     ROOT_DIR = mo.notebook_dir()
     RESULT_DIR = ROOT_DIR / "results"
@@ -117,7 +86,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""## Download image data and model weights""")
     return
 
@@ -144,16 +113,7 @@ def _(FACES_DIR, MODEL_DIR):
 
 
 @app.cell(hide_code=True)
-def _(
-    DATA_DIR,
-    DOWNLOAD_DIR,
-    ROOT_DIR,
-    cprint,
-    found_required_files,
-    shutil,
-    urllib,
-    zipfile,
-):
+def _(DATA_DIR, DOWNLOAD_DIR, ROOT_DIR, cprint, found_required_files):
     DOWNLOAD_URL = "https://keeper.mpdl.mpg.de/f/cb07841a00db43e88b32/?dl=1"
     path_to_zipped_files = DOWNLOAD_DIR / "data.zip"
     _downloaded_and_unzipped = False
@@ -211,7 +171,7 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(DATA_DIR, DOWNLOAD_URL, found_required_files, mo, path_to_zipped_files):
+def _(DATA_DIR, DOWNLOAD_URL, found_required_files, path_to_zipped_files):
     download_button = mo.download(
         data=DOWNLOAD_URL,
         filename=str(path_to_zipped_files),
@@ -267,7 +227,7 @@ def _(DATA_DIR, DOWNLOAD_URL, found_required_files, mo, path_to_zipped_files):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(
         r"""
     ## Get the model
@@ -284,7 +244,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(MODEL_DIR, OrderedDict, nn, torch):
+def _(MODEL_DIR):
     class VGGFace(nn.Module):
         """
         VGGFace class.
@@ -454,7 +414,7 @@ def _(MODEL_DIR, OrderedDict, nn, torch):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     # Get the trained VGG-Face model
     show_model = mo.ui.switch(label="Show model")
     show_model
@@ -473,7 +433,7 @@ def _(show_model, vgg_face):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(
         r"""
     ## Load image data for the model
@@ -486,7 +446,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(Path, cv2, mo, np, torch):
+def _():
     IMG_SIZE = (224, 224)
     FILETYPES = [".png", ".jpg", ".jpeg"]
 
@@ -517,7 +477,7 @@ def _(Path, cv2, mo, np, torch):
 
 
 @app.cell(hide_code=True)
-def _(FILETYPES, mo):
+def _(FILETYPES):
     upload_pic = mo.ui.file(
         filetypes=FILETYPES,
         kind="area",  # "button",
@@ -528,7 +488,7 @@ def _(FILETYPES, mo):
 
 
 @app.cell(hide_code=True)
-def _(FACES_DIR, FILETYPES, ROOT_DIR, mo, upload_pic):
+def _(FACES_DIR, FILETYPES, ROOT_DIR, upload_pic):
     file_browser = mo.ui.file_browser(
         initial_path=FACES_DIR,
         filetypes=FILETYPES,
@@ -562,7 +522,7 @@ def _(FACES_DIR, FILETYPES, ROOT_DIR, mo, upload_pic):
 
 
 @app.cell(hide_code=True)
-def _(mo, upload_pic):
+def _(upload_pic):
     def _name_image_upload():
         if upload_pic.value:
             return mo.ui.text_area(
@@ -585,14 +545,9 @@ def _(mo, upload_pic):
 def _(
     FACES_DIR,
     IMG_SIZE,
-    Image,
     file_browser,
     image_name,
-    io,
     load_image_for_model,
-    mo,
-    re,
-    torch,
     upload_pic,
 ):
     path_to_image = None
@@ -667,7 +622,7 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""### Get image labels of the original VGG-Face dataset""")
     return
 
@@ -683,14 +638,14 @@ def _(MODEL_DIR):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     show_labels = mo.ui.switch(label="Show labels (i.e., names of celebrities)")
     show_labels
     return (show_labels,)
 
 
 @app.cell(hide_code=True)
-def _(list_of_labels, mo, show_labels):
+def _(list_of_labels, show_labels):
     # Show labels
     def _show_labels():
         if show_labels.value:
@@ -703,7 +658,7 @@ def _(list_of_labels, mo, show_labels):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(
         r"""
     ## Predict the face identity in an image
@@ -736,7 +691,7 @@ def _():
 
 
 @app.cell(hide_code=True)
-def _(display_name, get_search_url, img, list_of_labels, torch, vgg_face):
+def _(display_name, get_search_url, img, list_of_labels, vgg_face):
     # Push image through the model
     out = vgg_face(img)
 
@@ -754,7 +709,7 @@ def _(display_name, get_search_url, img, list_of_labels, torch, vgg_face):
 
 
 @app.cell(hide_code=True)
-def _(idx_pred, img_search_url, list_of_labels, mo, pred_name):
+def _(idx_pred, img_search_url, list_of_labels, pred_name):
     neuron_stat = mo.stat(
         value=idx_pred.item(),
         label="predicted",
@@ -774,7 +729,7 @@ def _(idx_pred, img_search_url, list_of_labels, mo, pred_name):
     ### The predicted person is: [**{pred_name}**]({img_search_url})
     ---
 
-    {mo.hstack([neuron_stat, total_stat])}
+    {mo.hstack([neuron_stat, total_stat], justify="start", gap=5)}
 
 
     *Note: The total number of face identities is equal to the number of output neurons (classes)*
@@ -784,13 +739,13 @@ def _(idx_pred, img_search_url, list_of_labels, mo, pred_name):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""## Analyse the model decision""")
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(
         r"""
     ### Explain the prediction using explainable artificial intelligence (XAI)
@@ -803,7 +758,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(VGGCanonizer):
+def _():
     COMPOSITE_NAMES = [
         "epsilon_gamma_box",  # 0
         "epsilon_plus",  # 1
@@ -828,7 +783,7 @@ def _(VGGCanonizer):
 
 
 @app.cell(hide_code=True)
-def _(display_name, idx_pred, list_of_labels, mo, n_labels):
+def _(display_name, idx_pred, list_of_labels, n_labels):
     select_neuron = mo.ui.slider(
         start=0,
         stop=n_labels,
@@ -856,7 +811,7 @@ def _(display_name, idx_pred, list_of_labels, mo, n_labels):
 
 
 @app.cell(hide_code=True)
-def _(COMPOSITE_NAMES, mo):
+def _(COMPOSITE_NAMES):
     comp_name = mo.ui.dropdown(
         COMPOSITE_NAMES,
         allow_select_none=False,
@@ -885,18 +840,7 @@ def _(COMPOSITE_NAMES, mo):
 
 
 @app.cell(hide_code=True)
-def _(
-    COMPOSITES,
-    COMPOSITE_KWARGS,
-    Gradient,
-    comp_name,
-    img,
-    mo,
-    n_labels,
-    select_neuron,
-    torch,
-    vgg_face,
-):
+def _(COMPOSITE_KWARGS, comp_name, img, n_labels, select_neuron, vgg_face):
     # Load zennit tools
     # composite = EpsilonGammaBox(low=-3.0, high=3.0, canonizers=canonizers)
     composite = COMPOSITES[comp_name.value](**COMPOSITE_KWARGS[comp_name.value])
@@ -923,7 +867,7 @@ def _(relevance):
 
 
 @app.cell(hide_code=True)
-def _(amax, mo):
+def _(amax):
     # UI for displaying heatmaps
     CMAP = {
         "bwr": "bwr",
@@ -986,9 +930,7 @@ def _(
     display_name,
     get_search_url,
     heatmap,
-    imgify,
     list_of_labels,
-    mo,
     path_to_image,
     rslider_vminmax,
     select_neuron,
@@ -1039,7 +981,7 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(comp_name, mo, path_to_image, select_neuron, slider_level, xai_cmap):
+def _(comp_name, path_to_image, select_neuron, slider_level, xai_cmap):
     path_to_heatmap = (
         mo.notebook_dir()
         / "results"
@@ -1064,8 +1006,6 @@ def _(
     CMAP,
     IMG_SIZE,
     heatmap,
-    imsave,
-    mo,
     path_to_heatmap,
     rslider_vminmax,
     save_button,
@@ -1126,7 +1066,7 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(
         r"""
     ## Extract latent activation maps
@@ -1139,7 +1079,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(Path, RESULT_DIR, ROOT_DIR, VGGFace, load_image_for_model, np, torch):
+def _(RESULT_DIR, ROOT_DIR, VGGFace, load_image_for_model):
     path_to_activation_map_dir = RESULT_DIR / "activation_maps"
 
     def create_name_of_activation_map(layer_name: str, image_path: str | Path) -> str:
@@ -1210,7 +1150,7 @@ def _(Path, RESULT_DIR, ROOT_DIR, VGGFace, load_image_for_model, np, torch):
 
 
 @app.cell(hide_code=True)
-def _(ROOT_DIR, mo, path_to_activation_map_dir, vgg_face):
+def _(ROOT_DIR, path_to_activation_map_dir, vgg_face):
     select_layer = mo.ui.dropdown(
         options=[
             lay
@@ -1250,7 +1190,7 @@ def _(ROOT_DIR, mo, path_to_activation_map_dir, vgg_face):
 
 
 @app.cell(hide_code=True)
-def _(extract_activation_maps, mo, path_to_image, select_layer, vgg_face):
+def _(extract_activation_maps, path_to_image, select_layer, vgg_face):
     # with mo.persistent_cache(name="activation_maps", save_path=RESULT_DIR / "cache"):
     amap = extract_activation_maps(
         model=vgg_face,
@@ -1265,7 +1205,7 @@ def _(extract_activation_maps, mo, path_to_image, select_layer, vgg_face):
 
 
 @app.cell(hide_code=True)
-def _(FACES_DIR, ROOT_DIR, mo):
+def _(FACES_DIR, ROOT_DIR):
     all_amap_button = mo.ui.run_button(
         kind="success",
         tooltip=f"Compute / load activation maps for all face images in './{FACES_DIR.relative_to(ROOT_DIR)}/'",
@@ -1283,7 +1223,6 @@ def _(
     create_name_of_activation_map,
     extract_activation_maps,
     get_df_vgg_activation_maps,
-    mo,
     path_to_activation_map_dir,
     select_layer,
     vgg_face,
@@ -1351,7 +1290,7 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(ROOT_DIR, all_amap_button, mo, path_to_activation_map_dir):
+def _(ROOT_DIR, all_amap_button, path_to_activation_map_dir):
     all_amap_button  # so the cell will update if the button is pressed above
     mo.md(
         f"""
@@ -1363,7 +1302,7 @@ def _(ROOT_DIR, all_amap_button, mo, path_to_activation_map_dir):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(
         r"""
     ### Analysis of feature / activation maps
@@ -1380,7 +1319,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo, np):
+def _():
     select_pca = mo.ui.slider(
         steps=np.round(np.append([0], np.arange(0.80, 1.0, 0.01)), 2),
         value=None,
@@ -1404,7 +1343,7 @@ def _(mo, np):
 
 
 @app.cell(hide_code=True)
-def _(PCA, feat_tab, mo, pd, select_pca):
+def _(feat_tab, select_pca):
     def _apply_pca(feature_table: pd.DataFrame | None):
         if feature_table is None:
             mo.stop(
@@ -1443,7 +1382,7 @@ def _(PCA, feat_tab, mo, pd, select_pca):
 
 
 @app.cell(hide_code=True)
-def _(feat_tab_t, umap):
+def _(feat_tab_t):
     reducer = umap.UMAP(
         n_neighbors=5,
         min_dist=0.15,
@@ -1456,7 +1395,7 @@ def _(feat_tab_t, umap):
 
 
 @app.cell(hide_code=True)
-def _(alt, embedding, get_list_of_face_names, mo, pd, select_pca):
+def _(embedding, get_list_of_face_names, select_pca):
     df = pd.DataFrame(
         {
             "Dim-1": embedding[:, 0],
@@ -1540,13 +1479,13 @@ def _(alt, embedding, get_list_of_face_names, mo, pd, select_pca):
 
 
 @app.cell(hide_code=True)
-def _(mo, mo_chart):
+def _(mo_chart):
     selection_table = mo.ui.table(mo_chart.value)
     return (selection_table,)
 
 
 @app.cell(hide_code=True)
-def _(Image, find_image_path, mo, mo_chart, selection_table):
+def _(find_image_path, mo_chart, selection_table):
     # show images: either the first 10 from the selection or the first ten
     # selected in the table
     mo.stop(not len(mo_chart.value))
@@ -1593,7 +1532,7 @@ def _(Image, find_image_path, mo, mo_chart, selection_table):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(
         r"""
     ### Compute similarities between faces
@@ -1605,7 +1544,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(math, np, path_to_activation_map_dir, pd, select_layer):
+def _(path_to_activation_map_dir, select_layer):
     def chop_layer_name(face_name: str, layer_name: str) -> str:
         return face_name.split(f"{layer_name}_")[-1]
 
@@ -1647,7 +1586,7 @@ def _(math, np, path_to_activation_map_dir, pd, select_layer):
 
 
 @app.cell(hide_code=True)
-def _(PCA, StandardScaler, get_df_vgg_activation_maps, np, npt, pd):
+def _(StandardScaler, get_df_vgg_activation_maps):
     def normalize(
         array: npt.ArrayLike,
         lower_bound: float,
@@ -1789,7 +1728,7 @@ def _(PCA, StandardScaler, get_df_vgg_activation_maps, np, npt, pd):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""#### Compute the similarity matrix""")
     return
 
@@ -1810,13 +1749,13 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""##### Visualize the similarity matrix""")
     return
 
 
 @app.cell(hide_code=True)
-def _(get_list_of_face_names, np, plt, rsatoolbox):
+def _(get_list_of_face_names):
     def vectorize_similarity_matrix(face_sim_mat: np.ndarray) -> np.ndarray:
         """
         Take the upper triangle of a given similarity matrix and return it as vector.
@@ -1902,7 +1841,7 @@ def _(get_list_of_face_names, np, plt, rsatoolbox):
 
 
 @app.cell(hide_code=True)
-def _(mo, sim_mat, visualise_matrix):
+def _(sim_mat, visualise_matrix):
     fig_sim_mat = None  # init
     if sim_mat is not None:
         fig_sim_mat = visualise_matrix(
@@ -1916,13 +1855,13 @@ def _(mo, sim_mat, visualise_matrix):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""Examples of who looks dis-/similar""")
     return
 
 
 @app.cell(hide_code=True)
-def _(all_amap_button, get_list_of_face_names, mo, path_to_image):
+def _(all_amap_button, get_list_of_face_names, path_to_image):
     all_amap_button  # reload when button is pressed
     select_face = mo.ui.dropdown(
         get_list_of_face_names(),
@@ -1934,7 +1873,7 @@ def _(all_amap_button, get_list_of_face_names, mo, path_to_image):
 
 
 @app.cell(hide_code=True)
-def _(FACES_DIR, Path, get_list_of_face_names, mo, np, select_face, sim_mat):
+def _(FACES_DIR, get_list_of_face_names, select_face, sim_mat):
     # for idx_face, face_name in enumerate(get_list_of_face_names()):
 
     def find_image_path(face_name: str) -> Path:
@@ -2016,7 +1955,7 @@ def _(FACES_DIR, Path, get_list_of_face_names, mo, np, select_face, sim_mat):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(
         r"""## Discussion – How to combine the previous analysis with cognitive & neuroscientific data"""
     )
@@ -2024,7 +1963,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(RESULT_DIR, ROOT_DIR, mo):
+def _(RESULT_DIR, ROOT_DIR):
     discussion_notes = mo.ui.text_area(
         placeholder="Take notes in markdown ...", rows=20
     )
@@ -2046,7 +1985,7 @@ def _(RESULT_DIR, ROOT_DIR, mo):
 
 
 @app.cell(hide_code=True)
-def _(RESULT_DIR, ROOT_DIR, datetime, discussion_notes, mo, save_notes):
+def _(RESULT_DIR, ROOT_DIR, discussion_notes, save_notes):
     def _save_notes_to_file():
         if save_notes.value:
             path_to_notes = RESULT_DIR / "discussion_notes.md"
@@ -2068,13 +2007,13 @@ def _(RESULT_DIR, ROOT_DIR, datetime, discussion_notes, mo, save_notes):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""## Further material on XAI""")
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.vstack(
         [
             mo.md(
@@ -2103,7 +2042,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(
         r"""
     ## Housekeeping
@@ -2135,7 +2074,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.hstack(
         [
             mo.md(
