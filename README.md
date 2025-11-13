@@ -22,6 +22,8 @@ Check the section [Requirements](#requirements) for information on how to instal
 uvx marimo edit --sandbox facexai.py
 ```
 
+*Alternatively, run the notebook on a cloud server:* [![Open in molab](https://marimo.io/molab-shield.svg)](https://molab.marimo.io/github/SHEscher/facexai/blob/main/facexai.py)
+
 #### Add packages [optional]
 
 In case you extend the notebook and want to add additional packages, use the following command:
