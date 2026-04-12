@@ -4,8 +4,8 @@
 # /// script
 # requires-python = ">=3.13,<3.14"
 # dependencies = [
-#     "marimo>=0.15.0,<0.16",
-#     "numpy<=2.3,>=2.2",
+#     "marimo>=0.23.1,<0.24",
+#     "numpy>=2.2,<=2.3",
 #     "torch==2.7.1",
 #     "zennit==0.5.1",
 #     "opencv-python==4.11.0.86",
@@ -22,50 +22,49 @@
 
 import marimo
 
-__generated_with = "0.15.0"
+__generated_with = "0.23.1"
 app = marimo.App(width="medium")
 
 with app.setup(hide_code=True):
     # Initialization code that runs before all other cells
-    import marimo as mo
-    from datetime import datetime
     import io
-    import re
     import math
-    import matplotlib.pyplot as plt
+    import re
+    import shutil
+    import urllib
+    import zipfile
+    from collections import OrderedDict
+    from datetime import datetime
+    from pathlib import Path
+
     import altair as alt
+    import cv2
+    import marimo as mo
+    import matplotlib.pyplot as plt
     import numpy as np
-    from numpy import typing as npt
     import pandas as pd
     import rsatoolbox
     import torch
-    from torch import nn
-    from pathlib import Path
-    from collections import OrderedDict
-    import cv2
-    from PIL import Image
-    import urllib
-    import shutil
-    import zipfile
     import umap
+    from numpy import typing as npt
+    from PIL import Image
     from sklearn.decomposition import PCA
+    from torch import nn
     from zennit.attribution import Gradient
-    from zennit.torchvision import VGGCanonizer
     from zennit.composites import (
         COMPOSITES,  # dict of all composite classes
     )
     from zennit.image import imgify, imsave
+    from zennit.torchvision import VGGCanonizer
 
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     # Exploring predictions and latent features of deep neural networks
 
-    [Simon M. Hofmann](#contact) (2025)
-    """
-    )
+    [Simon M. Hofmann](#contact) (2025-2026)
+    """)
     return
 
 
@@ -87,7 +86,9 @@ def _():
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""## Download image data and model weights""")
+    mo.md(r"""
+    ## Download image data and model weights
+    """)
     return
 
 
@@ -228,8 +229,7 @@ def _(DATA_DIR, DOWNLOAD_URL, found_required_files, path_to_zipped_files):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Get the model
 
     ### Load VGG-Face
@@ -238,8 +238,7 @@ def _():
     been trained to predict face identities (i.e., celebrities; $N_{identities} = 2,622$) from a large image dataset.
 
     **Question**: Could VGG-Face be a model of human face perception? Why (not)?
-    """
-    )
+    """)
     return
 
 
@@ -418,7 +417,6 @@ def _():
     # Get the trained VGG-Face model
     show_model = mo.ui.switch(label="Show model")
     show_model
-
     return (show_model,)
 
 
@@ -434,14 +432,12 @@ def _(show_model, vgg_face):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Load image data for the model
 
     For the following analysis, we choose one example image.
     You can load / use your own image(s) – that makes this a bit more fun.
-    """
-    )
+    """)
     return
 
 
@@ -623,7 +619,9 @@ def _(
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""### Get image labels of the original VGG-Face dataset""")
+    mo.md(r"""
+    ### Get image labels of the original VGG-Face dataset
+    """)
     return
 
 
@@ -659,8 +657,7 @@ def _(list_of_labels, show_labels):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Predict the face identity in an image
 
     Use the selected image and predict the person in the image.
@@ -669,8 +666,7 @@ def _():
     the network will make **a guess that should rely on similarities to data from the training distribution**.
     However, **unexpected predictions / classifications can occur**, too!
     That is, the person in the provided image has little or no resemblance to the predicted celebrity (i.e., class).
-    """
-    )
+    """)
     return
 
 
@@ -740,20 +736,20 @@ def _(idx_pred, img_search_url, list_of_labels, pred_name):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""## Analyse the model decision""")
+    mo.md(r"""
+    ## Analyse the model decision
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     ### Explain the prediction using explainable artificial intelligence (XAI)
 
     Use the post-hoc XAI-method [*Layer-wise relevance propagation* (LRP)](https://doi.org/10.1038/s41467-019-08987-4)
     to analyze the model decision.
-    """
-    )
+    """)
     return
 
 
@@ -778,7 +774,6 @@ def _():
         "epsilon_alpha2_beta1_flat": dict(canonizers=canonizers),
         "excitation_backprop": dict(canonizers=canonizers),
     }
-
     return COMPOSITE_KWARGS, COMPOSITE_NAMES
 
 
@@ -806,7 +801,6 @@ def _(display_name, idx_pred, list_of_labels, n_labels):
             select_neuron,
         ]
     )
-
     return (select_neuron,)
 
 
@@ -835,7 +829,6 @@ def _(COMPOSITE_NAMES):
         gap=3,
         widths=[1.5, 2],
     )
-
     return (comp_name,)
 
 
@@ -1067,14 +1060,12 @@ def _(
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Extract latent activation maps
 
     We feed our selected image to the network and extract the neural activation in one selected layer,
     aka the activation maps.
-    """
-    )
+    """)
     return
 
 
@@ -1303,8 +1294,7 @@ def _(ROOT_DIR, all_amap_button, path_to_activation_map_dir):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     ### Analysis of feature / activation maps
 
     *using `PCA` and `UMAP`*
@@ -1313,8 +1303,7 @@ def _():
     These maps are of high dimensionality.
     Here, we explore the space these activation maps span,
     and ideally learn something about how the model *perceives* the different faces.
-    """
-    )
+    """)
     return
 
 
@@ -1390,7 +1379,6 @@ def _(feat_tab_t):
         # random_state=42,
     )
     embedding = reducer.fit_transform(feat_tab_t)
-
     return (embedding,)
 
 
@@ -1533,13 +1521,11 @@ def _(find_image_path, mo_chart, selection_table):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     ### Compute similarities between faces
 
     We now use the feature maps – representing the faces – and compute their pair-wise similarities.
-    """
-    )
+    """)
     return
 
 
@@ -1729,7 +1715,9 @@ def _(StandardScaler, get_df_vgg_activation_maps):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""#### Compute the similarity matrix""")
+    mo.md(r"""
+    #### Compute the similarity matrix
+    """)
     return
 
 
@@ -1750,7 +1738,9 @@ def _(
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""##### Visualize the similarity matrix""")
+    mo.md(r"""
+    ##### Visualize the similarity matrix
+    """)
     return
 
 
@@ -1856,7 +1846,9 @@ def _(sim_mat, visualise_matrix):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Examples of who looks dis-/similar""")
+    mo.md(r"""
+    Examples of who looks dis-/similar
+    """)
     return
 
 
@@ -1956,9 +1948,9 @@ def _(FACES_DIR, get_list_of_face_names, select_face, sim_mat):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""## Discussion – How to combine the previous analysis with cognitive & neuroscientific data"""
-    )
+    mo.md(r"""
+    ## Discussion – How to combine the previous analysis with cognitive & neuroscientific data
+    """)
     return
 
 
@@ -2008,7 +2000,9 @@ def _(RESULT_DIR, ROOT_DIR, discussion_notes, save_notes):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""## Further material on XAI""")
+    mo.md(r"""
+    ## Further material on XAI
+    """)
     return
 
 
@@ -2037,14 +2031,12 @@ def _():
         ],
         gap=0,
     )
-
     return
 
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Housekeeping
 
     Some recommendations after being done:
@@ -2068,8 +2060,7 @@ def _():
     Consider deleting the `./results/` folder to save some disk space after running the script.
 
     In case the automatic data download has been interrupted, delete the folder `./download/` manually.
-    """
-    )
+    """)
     return
 
 
@@ -2095,7 +2086,6 @@ def _():
             ),
         ]
     )
-
     return
 
 
