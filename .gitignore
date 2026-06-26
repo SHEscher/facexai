@@ -1,8 +1,10 @@
 temp/
 data/
 results/
+crop_images/
 .DS_Store
 .idea/
 __marimo__/
 *backup*
 .env
+*.tflite
