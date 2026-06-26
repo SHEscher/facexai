@@ -22,7 +22,7 @@
 
 import marimo
 
-__generated_with = "0.23.1"
+__generated_with = "0.23.11"
 app = marimo.App(width="medium")
 
 with app.setup(hide_code=True):
