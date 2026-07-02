@@ -22,11 +22,10 @@
 
 import marimo
 
-__generated_with = "0.23.11"
+__generated_with = "0.23.13"
 app = marimo.App(width="medium")
 
 with app.setup(hide_code=True):
-    # Initialization code that runs before all other cells
     import io
     import math
     import re
@@ -70,7 +69,6 @@ def _():
 
 @app.cell(hide_code=True)
 def _():
-    # Collect relevant paths
     ROOT_DIR = mo.notebook_dir()
     RESULT_DIR = ROOT_DIR / "results"
     DATA_DIR = ROOT_DIR / "data"
@@ -414,7 +412,6 @@ def _(MODEL_DIR):
 
 @app.cell(hide_code=True)
 def _():
-    # Get the trained VGG-Face model
     show_model = mo.ui.switch(label="Show model")
     show_model
     return (show_model,)
@@ -627,7 +624,6 @@ def _():
 
 @app.cell(hide_code=True)
 def _(MODEL_DIR):
-    # Read class labels
     path_to_labels = MODEL_DIR / "names.txt"
 
     with open(path_to_labels, "r") as labels:
@@ -644,7 +640,6 @@ def _():
 
 @app.cell(hide_code=True)
 def _(list_of_labels, show_labels):
-    # Show labels
     def _show_labels():
         if show_labels.value:
             return mo.as_html(list_of_labels)  # e.g., "Abigail_Breslin"
@@ -688,7 +683,6 @@ def _():
 
 @app.cell(hide_code=True)
 def _(display_name, get_search_url, img, list_of_labels, vgg_face):
-    # Push image through the model
     out = vgg_face(img)
 
     # Check the output vector
@@ -701,11 +695,39 @@ def _(display_name, get_search_url, img, list_of_labels, vgg_face):
     # Extract name of person
     pred_name = display_name(label=list_of_labels[idx_pred])
     img_search_url = get_search_url(name=pred_name)
-    return idx_pred, img_search_url, n_labels, pred_name
+    return idx_pred, img_search_url, n_labels, out, pred_name
 
 
 @app.cell(hide_code=True)
-def _(idx_pred, img_search_url, list_of_labels, pred_name):
+def _(list_of_labels, out):
+    pred_df = pd.DataFrame(
+        {"celebrity": list_of_labels, "probability": nn.Softmax(dim=1)(out).detach()[0]}
+    )
+    _n_top = 20  # plot the top N predictions
+    _max_prob = pred_df["probability"].max() + pred_df["probability"].max() * 0.1
+    prob_chart = (
+        alt.Chart(pred_df.sort_values("probability", ascending=False).head(_n_top))
+        .mark_bar()
+        .encode(
+            x=alt.X(
+                "celebrity:N",
+                title=f"Top {_n_top} Celebrities (sorted by probability)",
+                sort=alt.EncodingSortField(field="probability", order="descending"),
+                axis=alt.Axis(labelAngle=-40),
+            ),
+            y=alt.Y(
+                "probability:Q",
+                title="Probability (prediction)",
+                scale=alt.Scale(domain=[0, _max_prob]),
+            ),
+            tooltip=["celebrity", "probability"],
+        )
+    )
+    return (prob_chart,)
+
+
+@app.cell(hide_code=True)
+def _(idx_pred, img_search_url, list_of_labels, pred_name, prob_chart):
     neuron_stat = mo.stat(
         value=idx_pred.item(),
         label="predicted",
@@ -725,7 +747,7 @@ def _(idx_pred, img_search_url, list_of_labels, pred_name):
     ### The predicted person is: [**{pred_name}**]({img_search_url})
     ---
 
-    {mo.hstack([neuron_stat, total_stat], justify="start", gap=5)}
+    {mo.hstack([neuron_stat, total_stat, prob_chart], justify="start", align="center", gap=5)}
 
 
     *Note: The total number of face identities is equal to the number of output neurons (classes)*
@@ -834,8 +856,6 @@ def _(COMPOSITE_NAMES):
 
 @app.cell(hide_code=True)
 def _(COMPOSITE_KWARGS, comp_name, img, n_labels, select_neuron, vgg_face):
-    # Load zennit tools
-    # composite = EpsilonGammaBox(low=-3.0, high=3.0, canonizers=canonizers)
     composite = COMPOSITES[comp_name.value](**COMPOSITE_KWARGS[comp_name.value])
 
     with Gradient(model=vgg_face, composite=composite) as attributor:
@@ -853,15 +873,13 @@ def _(COMPOSITE_KWARGS, comp_name, img, n_labels, select_neuron, vgg_face):
 
 @app.cell(hide_code=True)
 def _(relevance):
-    # Compute the heatmap from the relevance map; That is, sum over color channels
     heatmap = relevance.sum(1)
-    amax = heatmap.abs().numpy().max((1, 2))  # not necessary here
+    amax = heatmap.abs().numpy().max((1, 2))
     return amax, heatmap
 
 
 @app.cell(hide_code=True)
 def _(amax):
-    # UI for displaying heatmaps
     CMAP = {
         "bwr": "bwr",
         "coldnhot": "coldnhot",
@@ -1182,7 +1200,6 @@ def _(ROOT_DIR, path_to_activation_map_dir, vgg_face):
 
 @app.cell(hide_code=True)
 def _(extract_activation_maps, path_to_image, select_layer, vgg_face):
-    # with mo.persistent_cache(name="activation_maps", save_path=RESULT_DIR / "cache"):
     amap = extract_activation_maps(
         model=vgg_face,
         image_path=path_to_image,
@@ -1218,7 +1235,6 @@ def _(
     select_layer,
     vgg_face,
 ):
-    # Compute activation maps of a layer for all faces
     def get_list_of_images():
         """Get a list of all images in the FACES_DIR."""
         list_of_images = [
@@ -1474,8 +1490,6 @@ def _(mo_chart):
 
 @app.cell(hide_code=True)
 def _(find_image_path, mo_chart, selection_table):
-    # show images: either the first 10 from the selection or the first ten
-    # selected in the table
     mo.stop(not len(mo_chart.value))
 
     def show_images(faces: list[str], max_images: int = 10):
@@ -1866,8 +1880,6 @@ def _(all_amap_button, get_list_of_face_names, path_to_image):
 
 @app.cell(hide_code=True)
 def _(FACES_DIR, get_list_of_face_names, select_face, sim_mat):
-    # for idx_face, face_name in enumerate(get_list_of_face_names()):
-
     def find_image_path(face_name: str) -> Path:
         return list(FACES_DIR.glob(f"{face_name}.*"))[0]  # there should be only one
 
