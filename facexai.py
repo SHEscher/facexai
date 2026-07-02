@@ -701,7 +701,10 @@ def _(display_name, get_search_url, img, list_of_labels, vgg_face):
 @app.cell(hide_code=True)
 def _(list_of_labels, out):
     pred_df = pd.DataFrame(
-        {"celebrity": list_of_labels, "probability": nn.Softmax(dim=1)(out).detach()[0]}
+        {
+            "celebrity": [n.replace("_", " ") for n in list_of_labels],
+            "probability": nn.Softmax(dim=1)(out).detach()[0],
+        }
     )
     _n_top = 20  # plot the top N predictions
     _max_prob = pred_df["probability"].max() + pred_df["probability"].max() * 0.1
@@ -1530,9 +1533,6 @@ def _(find_image_path, mo_chart, selection_table):
         {selection_table}
         """
     )
-    return
-
-
 @app.cell(hide_code=True)
 def _():
     mo.md(r"""
