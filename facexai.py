@@ -1533,6 +1533,8 @@ def _(find_image_path, mo_chart, selection_table):
         {selection_table}
         """
     )
+
+
 @app.cell(hide_code=True)
 def _():
     mo.md(r"""
