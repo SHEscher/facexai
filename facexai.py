@@ -1533,6 +1533,7 @@ def _(find_image_path, mo_chart, selection_table):
         {selection_table}
         """
     )
+    return
 
 
 @app.cell(hide_code=True)
@@ -1762,101 +1763,121 @@ def _():
 
 @app.cell(hide_code=True)
 def _(get_list_of_face_names):
-    def vectorize_similarity_matrix(face_sim_mat: np.ndarray) -> np.ndarray:
-        """
-        Take the upper triangle of a given similarity matrix and return it as vector.
-
-        ??? note "Ways to vectorize a matrix"
-            ```python
-                a = [[1 2 3]
-                     [4 5 6]
-                     [7 8 9]]
-
-                # This is how the diagonal can be excluded (as it is required here)
-                print(a[np.triu_indices(n=3, k=1)])
-                # > array([2, 3, 6])
-
-                # In contrast, see how the diagonal can be included (as it is not done here):
-                print(a[np.triu_indices(n=3, k=0)])
-                # > array([1, 2, 3, 5, 6, 9])
-            ```
-
-        :param face_sim_mat: face similarity matrix
-        :return: 1d vector of upper triangle
-        """
-        return face_sim_mat[np.triu_indices(n=face_sim_mat.shape[0], k=1)]
-
-    def visualise_matrix(
+    def visualise_matrix_interactive(
         face_sim_mat: np.ndarray,
-        **kwargs,
-    ) -> str | plt.Figure:
+        labels: list[str] | None = None,
+        vmin: float = 0.0,
+        vmax: float = 1.0,
+        fig_name: str = "Similarity matrix",
+        label_stride: int = 1,
+    ) -> alt.Chart:
         """
-        Visualize face similarity judgments.
+        Interactive face-similarity heatmap with hover tooltips.
 
-        :param face_sim_mat: matrix of face similarities
-        :return: figure object
+        Each cell shows both face names and the similarity value on mouse-over,
+        so labels no longer need to be dense. `label_stride` additionally thins
+        the axis tick labels (e.g. 2 = every second name) to avoid overlap.
+
+        :param face_sim_mat: square matrix of face similarities
+        :param labels: face names (defaults to get_list_of_face_names())
+        :param vmin: lower bound of the colour scale
+        :param vmax: upper bound of the colour scale
+        :param fig_name: chart title
+        :param label_stride: show only every Nth axis tick label
+        :return: altair chart
         """
-        # Get the name of the figure
-        fig_name = kwargs.pop("fig_name", "Similarity matrix")
+        if labels is None:
+            labels = get_list_of_face_names()
+        n = face_sim_mat.shape[0]
 
-        # Compute size of the figure
-        figsize = kwargs.pop(
-            "figsize",
-            (
-                round(
-                    face_sim_mat.shape[1] / min(face_sim_mat.shape) * 10
-                ),  # keep x-axis longer since we add colorbar
-                round(face_sim_mat.shape[0] / min(face_sim_mat.shape) * 9),
-            ),
-        )
-        # This is not ideal for our case, since it works with data with shape of (observations x channels).
-        rdms = rsatoolbox.rdm.RDMs(
-            dissimilarities=vectorize_similarity_matrix(face_sim_mat=face_sim_mat)
+        # Long-form dataframe: one row per cell
+        ii, jj = np.meshgrid(range(n), range(n), indexing="ij")
+        df = pd.DataFrame(
+            {
+                "Face A": [labels[i] for i in ii.ravel()],
+                "Face B": [labels[j] for j in jj.ravel()],
+                "similarity": face_sim_mat.ravel(),
+            }
         )
 
-        if "pattern_descriptor" in kwargs:
-            rdms.pattern_descriptors.update({"labels": get_list_of_face_names()})
-            rdms.pattern_descriptors.update({"index": range(face_sim_mat.shape[0])})
-
-        fig, ax_array, _ = rsatoolbox.vis.show_rdm(
-            rdms=rdms,
-            show_colorbar="panel",
-            vmin=kwargs.pop("vmin", 0.0),
-            vmax=kwargs.pop("vmax", 1.0),
-            figsize=figsize,
-            rdm_descriptor=fig_name,
-            num_pattern_groups=face_sim_mat.shape[0] / 2
-            if face_sim_mat.shape[0] % 2 == 0
-            else None,
-            pattern_descriptor=kwargs.pop(
-                "pattern_descriptor", None
-            ),  # labels OR index
-            **kwargs,
-            # cmap="viridis",
+        # Show only every Nth tick label to avoid overlap
+        shown = [labels[i] for i in range(0, n, label_stride)]
+        axis = alt.Axis(
+            labelExpr=f"indexof({shown!r}, datum.label) >= 0 ? datum.label : ''"
         )
 
-        # Set labels and title
-        if "xlabel" in kwargs:
-            ax_array[0][0].set_xlabel(kwargs.pop("xlabel"))
-        if "ylabel" in kwargs:
-            ax_array[0][0].set_ylabel(kwargs.pop("ylabel"))
-        # plt.show(block=False)
-        return fig
+        return (
+            alt.Chart(df, title=fig_name)
+            .mark_rect()
+            .encode(
+                x=alt.X("Face B:N", sort=labels, title=None, axis=axis),
+                y=alt.Y("Face A:N", sort=labels, title=None, axis=axis),
+                color=alt.Color(
+                    "similarity:Q",
+                    scale=alt.Scale(domain=[vmin, vmax], scheme="viridis"),
+                ),
+                tooltip=[
+                    alt.Tooltip("Face A:N"),
+                    alt.Tooltip("Face B:N"),
+                    alt.Tooltip("similarity:Q", format=".3f"),
+                ],
+            )
+            .properties(width=600, height=560)
+        )
 
-    return (visualise_matrix,)
+    return (visualise_matrix_interactive,)
 
 
 @app.cell(hide_code=True)
-def _(sim_mat, visualise_matrix):
-    fig_sim_mat = None  # init
+def _(sim_mat, visualise_matrix_interactive):
+    mo_chart_sim = None  # init
     if sim_mat is not None:
-        fig_sim_mat = visualise_matrix(
-            face_sim_mat=sim_mat,
-            pattern_descriptor="labels",  # "index" or "labels"
-            figsize=(8, 7),
-            # cmap="bwr"
+        mo_chart_sim = mo.ui.altair_chart(
+            visualise_matrix_interactive(
+                face_sim_mat=sim_mat,
+                label_stride=2,  # show every second name; raise to 3+ if still dense
+            )
         )
-    mo.center(fig_sim_mat)
+    mo.center(mo_chart_sim)
+    return (mo_chart_sim,)
+
+
+@app.cell(hide_code=True)
+def _(find_image_path, mo_chart_sim):
+    mo.stop(mo_chart_sim is None or not len(mo_chart_sim.value))
+
+    def _show_sim_images(faces: list[str], max_images: int = 10):
+        faces = faces[:max_images]
+        images = [Image.open(find_image_path(f)) for f in faces]
+        fig, axes = plt.subplots(1, len(faces))
+        fig.set_size_inches(12.5, 1.5)
+        axes = [axes] if len(faces) == 1 else axes.flat
+        for im, name, ax in zip(images, faces, axes):
+            ax.imshow(im, cmap="gray")
+            ax.set_title(name, fontsize=8)
+            ax.set_yticks([])
+            ax.set_xticks([])
+        plt.tight_layout()
+        return fig
+
+    # A selection of matrix cells yields (Face A, Face B) pairs; show the union
+    _selected_faces = sorted(
+        set(mo_chart_sim.value["Face A"]) | set(mo_chart_sim.value["Face B"])
+    )
+
+    _selected_images = mo.center(_show_sim_images(_selected_faces))
+
+    mo.md(
+        f"""
+        **Images of the faces in the selected cells**:
+
+        {mo.as_html(_selected_images)}
+
+        Here are all the selected cells (pairs):
+
+        {mo.ui.table(mo_chart_sim.value)}
+        """
+    )
     return
 
 
