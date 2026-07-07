@@ -13,7 +13,6 @@
 #     "pillow==11.3.0",
 #     "torchvision==0.22.1",
 #     "pandas==2.3.1",
-#     "rsatoolbox==0.3.0",
 #     "umap-learn==0.5.9.post2",
 #     "altair==5.5.0",
 #     "pyarrow==21.0.0",
@@ -42,7 +41,6 @@ with app.setup(hide_code=True):
     import matplotlib.pyplot as plt
     import numpy as np
     import pandas as pd
-    import rsatoolbox
     import torch
     import umap
     from numpy import typing as npt
