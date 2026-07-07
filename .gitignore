@@ -4,6 +4,7 @@ results/
 crop_images/
 .DS_Store
 .idea/
+__pycache__/
 __marimo__/
 *backup*
 .env
