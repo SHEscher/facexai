@@ -59,6 +59,15 @@ facexai/
 └── README.md
 ```
 
+### Face data
+
+Face data (images) should be square-cropped (width==height). 
+
+If you want a fast and automated way to do this on your own data,
+you can use this [script](https://github.com/SHEscher/facebox/blob/main/notebooks/square_crop.py)
+(which is part of the [`facebox`](https://github.com/SHEscher/facebox) toolbox)
+for both a single image and a batch of face images.
+
 ## Requirements
 
 Install the `Python` package manager `uv`
