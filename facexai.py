@@ -875,7 +875,43 @@ def conv_filter_helpers(
             caption=caption,
         )
 
-    return filter_kernel_image, filter_response_image
+    def edited_kernel_image(kernel_values):
+        """Apply a user-edited 3×3 kernel to each RGB channel of the current image."""
+        rgb = (
+            np.asarray(
+                Image.open(str(path_to_image)).convert("RGB").resize(IMG_SIZE),
+                dtype=np.float64,
+            )
+            / 255.0
+        )
+        tensor = torch.tensor(rgb).permute(2, 0, 1).unsqueeze(0)  # (1, 3, H, W)
+        kernel = (
+            torch.tensor(np.asarray(kernel_values, dtype=np.float64))
+            .view(1, 1, 3, 3)
+            .repeat(3, 1, 1, 1)  # one shared kernel per channel (depthwise)
+        )
+        filtered = nn.functional.conv2d(tensor, kernel, padding=1, groups=3)[0]
+        return mo.image(
+            imgify(filtered.numpy(), symmetric=True),
+            caption="Image filtered with the edited kernel (per RGB channel)",
+        )
+
+    return edited_kernel_image, filter_kernel_image, filter_response_image
+
+
+@app.cell(hide_code=True)
+def conv_filter_trained_note():
+    mo.md(r"""
+    **Trained filter — how the network actually responds.**
+
+    The panels below show the *fixed, learned* filter at the selected layer and
+    index. For `conv_1_1` its full `3×3×3` kernel is convolved with the
+    (pre-processed) input image, **mixing the R, G and B channels into a single
+    response map**. For deeper layers a filter acts on feature maps rather than
+    pixels, so instead we show the **activation map** it produces during a forward
+    pass. These panels are read-only — they depict what `VGG-Face` has learned.
+    """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -893,6 +929,57 @@ def conv_filter_view(
             filter_kernel_image(select_conv.value, select_filter.value),
             filter_response_image(select_conv.value, select_filter.value),
             mo.image(str(path_to_image), width=224, caption="Original image"),
+        ],
+        gap=2,
+        align="center",
+        justify="center",
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def conv_filter_editable_note():
+    mo.md(r"""
+    **Editable kernel — a convolution playground.**
+
+    The matrix below is seeded with the selected filter collapsed to a **single
+    `3×3`** (averaged over its input channels), but every value is editable. That
+    one kernel is then applied to **each RGB channel independently**, producing a
+    **colour** filtered image. Unlike the trained view above, this does *not* run
+    the network — it is a classic image convolution, meant for experimenting with
+    how kernel weights reshape the picture.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def conv_filter_kernel_edit(select_conv, select_filter, vgg_face):
+    _weights = (
+        vgg_face.features[select_conv.value]
+        .weight.data[select_filter.value]
+        .cpu()
+        .numpy()
+    )  # (in, 3, 3)
+    _seed = _weights.mean(axis=0)  # collapse to a single editable 3×3 kernel
+    edit_kernel = mo.ui.matrix(
+        _seed.round(4).tolist(),
+        min_value=-3.0,
+        max_value=3.0,
+        step=0.01,
+        precision=4,
+        label=f"Editable 3×3 kernel — {select_conv.value}, filter {select_filter.value}",
+    )
+    return (edit_kernel,)
+
+
+@app.cell(hide_code=True)
+def conv_filter_edited_view(edit_kernel, edited_kernel_image, path_to_image):
+    mo.stop(path_to_image is None, mo.md("**Please select or upload an image first.**"))
+
+    mo.hstack(
+        [
+            edit_kernel,
+            edited_kernel_image(edit_kernel.value),
         ],
         gap=2,
         align="center",
