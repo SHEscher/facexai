@@ -21,7 +21,7 @@
 
 import marimo
 
-__generated_with = "0.23.13"
+__generated_with = "0.23.14"
 app = marimo.App(width="medium")
 
 with app.setup(hide_code=True):
@@ -762,6 +762,142 @@ def _():
     mo.md(r"""
     ## Analyse the model decision
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _():
+    mo.md(r"""
+    ### Explore convolutional filters
+
+    A convolutional network like `VGG-Face` does not rely on hand-crafted image
+    filters — it **learns** its own during training. Every convolutional layer
+    holds a stack of small `3×3` filters (*kernels*); each one slides across its
+    input and reacts strongly to a particular visual pattern.
+
+    These filters form a hierarchy:
+
+    - **Early layers** (e.g. `conv_1_1`) act directly on the RGB pixels and learn
+      low-level features — edges, colour contrasts, simple textures.
+    - **Deeper layers** (e.g. `conv_5_3`) act on the *feature maps* of the previous
+      layer and respond to increasingly abstract, face-specific structure — parts
+      of eyes and noses, up to whole facial configurations.
+
+    Below you can **pick a layer and a filter** and inspect it three ways:
+
+    1. its **learned kernel weights**,
+    2. how it **responds to the current image** — for the first layer the `3×3` RGB
+       kernel is convolved directly with the image (a classic image filter), while
+       for deeper layers we show the **activation map** the filter produces during a
+       forward pass, and
+    3. the **original image** for reference.
+
+    This makes concrete what each filter has learned to "look for", and how that
+    changes with depth.
+
+    ---
+
+    Later we also explore, how we can use activation maps to analyse [similarites between faces](#extract-latent-activation-maps).
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def conv_filter_layer(vgg_face):
+    select_conv = mo.ui.dropdown(
+        options=[
+            name
+            for name, module in vgg_face.features.items()
+            if isinstance(module, nn.Conv2d)
+        ],
+        value="conv_1_1",
+        label="Conv layer",
+    )
+    return (select_conv,)
+
+
+@app.cell(hide_code=True)
+def conv_filter_controls(select_conv, vgg_face):
+    _n_filters = vgg_face.features[select_conv.value].out_channels
+    select_filter = mo.ui.slider(
+        start=0,
+        stop=_n_filters - 1,
+        value=0,
+        show_value=True,
+        full_width=True,
+        label=f"Filter index (0–{_n_filters - 1})",
+    )
+    mo.hstack([select_conv, select_filter], widths=[0.4, 1.0], gap=1, align="center")
+    return (select_filter,)
+
+
+@app.cell(hide_code=True)
+def conv_filter_helpers(
+    IMG_SIZE,
+    extract_activation_maps,
+    img,
+    path_to_image,
+    vgg_face,
+):
+    def filter_kernel_image(layer_name: str, k: int):
+        """Render the learned weights of filter `k` in `layer_name`."""
+        weights = (
+            vgg_face.features[layer_name].weight.data[k].cpu().numpy()
+        )  # (in, 3, 3)
+        if weights.shape[0] == 3:  # conv_1_1: a real 3x3 RGB kernel
+            kernel = imgify(weights, symmetric=True)
+            caption = "Learned 3×3 RGB kernel"
+        else:  # deeper layers: summarise over input channels
+            kernel = imgify(weights.mean(axis=0), cmap="coldnhot", symmetric=True)
+            caption = f"Mean 3×3 kernel over {weights.shape[0]} input channels"
+        return mo.image(kernel.resize((150, 150), Image.NEAREST), caption=caption)
+
+    def filter_response_image(layer_name: str, k: int):
+        """Show how filter `k` in `layer_name` acts on the current image."""
+        if layer_name == "conv_1_1":
+            conv = vgg_face.features[layer_name]
+            response = nn.functional.conv2d(
+                img, conv.weight.data[k : k + 1], conv.bias.data[k : k + 1], padding=1
+            )
+            array = response[0, 0].cpu().numpy()
+            caption = f"Filter {k} convolved directly with the image"
+        else:
+            amap = extract_activation_maps(
+                model=vgg_face,
+                image_path=path_to_image,
+                layer_name=layer_name,
+                verbose=False,
+            )
+            array = amap[0, k]
+            caption = f"Activation map of filter {k} (upsampled)"
+        return mo.image(
+            imgify(array, cmap="coldnhot", symmetric=True).resize(IMG_SIZE),
+            caption=caption,
+        )
+
+    return filter_kernel_image, filter_response_image
+
+
+@app.cell(hide_code=True)
+def conv_filter_view(
+    filter_kernel_image,
+    filter_response_image,
+    path_to_image,
+    select_conv,
+    select_filter,
+):
+    mo.stop(path_to_image is None, mo.md("**Please select or upload an image first.**"))
+
+    mo.hstack(
+        [
+            filter_kernel_image(select_conv.value, select_filter.value),
+            filter_response_image(select_conv.value, select_filter.value),
+            mo.image(str(path_to_image), width=224, caption="Original image"),
+        ],
+        gap=2,
+        align="center",
+        justify="center",
+    )
     return
 
 
